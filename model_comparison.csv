@@ -1,0 +1,6 @@
+ModelComparison,DecisionTrees,KNN,LogisiticReg,NaiveBayes,RandomForest,SVM,XGBoost,NeuralNetwork
+Precision,97.7843,99.0382,94.7302,97.6617,99.7002,94.3988,99.7334,
+Recall,97.7,99.0333,94.7,97.5667,99.7,94.1333,99.7333,
+Accuracy,97.7,99.0333,94.7,97.5667,99.7,94.1333,99.7333,
+TrainTime,7.76,3.35,314,5.41,514,73300,185,
+TestTime,1.15,103,1.81,1.44,40.6,79.7,0.154,
