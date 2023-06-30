@@ -32,56 +32,67 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" media="screen">
     <link rel="stylesheet" href="css/mv_add.css">
 
-</head>
-<body>
-    <!--header section start -->
-    <div class="header_section">
-        <div class="container">
-            <nav class="navbar navbar-dark bg-dark">
-                <a class="logo" href="index.html"><img src="images/logo.png"></a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample01" aria-controls="navbarsExample01" aria-expanded="false" aria-label="Toggle navigation">
-                </button>
-                <div class="collapse navbar-collapse" id="navbarsExample01">
-                    <ul class="navbar-nav mr-auto">
-                    </ul>
-                </div>
-                <div style="position: absolute; top: 0px; right: 0;">
-                    <img src="images/img-1.png" class="image_1">
-                </div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+      
+        <style>
+         .bg-section {
+           background-image: url('images/banner-bg-1.png');
+           background-size: 100%;
+           background-repeat: no-repeat;
+           background-position: top;
+           min-height: 500px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           color: #ffffff;
+           text-align: center;
+           background-color: aqua;
+         }
+         .container {
+            position: relative;
+         }
 
-                <style>
-                    .image_1 {
-                        width: 650px;
-                        height: auto;
-                    }
-                </style>
-            </nav>
-        </div>
-        <!--banner section start -->
-        <div class="banner_section layout_padding">
-            <div id="my_slider" class="carousel slide">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="taital_main">
-                                        <h4 class="banner_taital"><span class="font_size_90">Phishing</span><br> URL Checker</h4></br>
-                                        <p class="banner_text">Detect phishing or fraudulent links via an AI-powered real-time phishing URL checker.</p>
-                                        <div class="book_bt"><a href="#">Check Now</a></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    </style>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+         .bottomright {
+         position: absolute;
+         bottom: 8px;
+         right: 16px;
+         font-size: 24px;
+         }
+
+       </style>
+    </head>
+    <body class="home page-template-default page page-id-2 header_covers_slider wpb-js-composer js-comp-ver-5.0.1 vc_responsive"> 
+        <!--header section start -->
+        <header class="sticky">  
+            <section class="bg-section sticky">
+                <div class="container-fluid">
+                    <!--banner section start -->
+                      <div class="col-md-12 text-start">
+                         <h4 class="banner_taital"  style="padding-top:15%;"><span class="font_size_70">Phishing</span><br> URL Checker</h4></br>
+                         <p class="banner_text text-warning">Detect phishing or fraudulent links via an AI-powered real-time phishing link checker.</p>
+                      </div>
+                      <div class="col-md-12 text-start">
+                        <form id="myForm"></button>
+                                <input type="text" class="Enter_text" style=" border-radius: 25px;
+                                background: #ffffff;
+                                padding: 20px; 
+                                width: 50%;
+                                height: 16px;"  placeholder="Enter URL" name="" id="inputText">
+                                <button id="submitButton" class="search_text bg-secondary" style="border-radius: 25px;
+                                color: white;
+                                padding: 15px;
+                                text-align: center;
+                                text-decoration: none;
+                                display: inline-block;
+                                font-size: 16px;">SEARCH</button>
+                        </form>
+                        <div id="message" class="left-text font-weight-bold text-dark fs-3"></div>
+                      </div>
+                    <!--banner section end -->
                 </div>
-            </div>
-        </div>
-        <form id="myForm"><div class="button_main"></button><input type="text" class="Enter_text" placeholder="ENTER THE URL HERE" id="inputText"><button id="submitButton" class="search_text" type="submit">Search</button></div></form>
-        <div id="message" class="centered-text"></div>
+            </section>
+        </header>
         <script>
             document.getElementById('submitButton').addEventListener('click', function (event) {
                 event.preventDefault();
