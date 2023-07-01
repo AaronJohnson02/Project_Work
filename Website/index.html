@@ -114,16 +114,17 @@
                     })
                     .then(function (data) {
                         // Handle the response data
-                        console.log(data); // Output the response data to the browser console
-                        // Update the message based on the response
-                        if (data === '1') {
+                        var jsonData = JSON.parse(data);
+                        console.log(jsonData);
+                        if (jsonData[0].code == 1) {
                             message.textContent = '';
                             message.innerHTML += '<span class="xmark"></span><span class="push_right">Invalid URL. Please ensure that you copy and paste the URL in its entirety.</span>';
                         } else {
+                            input = jsonData[0].url;
                             message.textContent = '';
                             message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
-                            message.innerHTML += '<br>Scanning livefeed data<span class="push_right"><span class="buffering-symbol"></span></span>';
-                            fetch('http://127.0.0.1:5000/scan_db?input=' + input, {
+                            message.innerHTML += '<br>Verifying SSL certificate<span class="push_right"><span class="buffering-symbol"></span></span>';
+                            fetch('http://127.0.0.1:5000/verify_ssl?input=' + input, {
                                 method: 'GET'
                             })
                                 .then(function (response) {
@@ -137,18 +138,26 @@
                                 })
                                 .then(function (data) {
                                     // Handle the response data
-                                    console.log(data); // Output the response data to the browser console
-                                    // Update the message based on the response
-                                    if (data === '1') {
+                                    var jsonData = JSON.parse(data);
+                                    console.log(jsonData);
+                                    if (jsonData[0].code == 1) {
                                         message.textContent = '';
                                         message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
-                                        message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! URL leads to a known PHISHING domain.</span>';
+                                        message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Could not verify SSL certificate. Connection to this web server may not be secure</span>';
                                     } else {
+                                        const headers1 = ['Feature', 'Value'];
+                                        const rows1 = [
+                                            ['Certificate name', jsonData[0].cert_common_name],
+                                            ['Subject', jsonData[0].subject],
+                                            ['Issued in', jsonData[0].issuer_country],
+                                            ['Issued by', jsonData[0].issuer_org],
+                                            ['Expiry', jsonData[0].expiry]
+                                        ];
                                         message.textContent = '';
                                         message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
-                                        message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>';
-                                        message.innerHTML += '<br>Scanning DNSBL databases<span class="push_right"><span class="buffering-symbol"></span></span>';
-                                        fetch('http://127.0.0.1:5000/scan_dnsbl?input=' + input, {
+                                        message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
+                                        message.innerHTML += '<br>Scanning livefeed data<span class="push_right"><span class="buffering-symbol"></span></span>';
+                                        fetch('http://127.0.0.1:5000/scan_db?input=' + input, {
                                             method: 'GET'
                                         })
                                             .then(function (response) {
@@ -167,15 +176,15 @@
                                                 if (data === '1') {
                                                     message.textContent = '';
                                                     message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
-                                                    message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>'
-                                                    message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! URL leads to a Blacklisted Domain htat is potentially dangerous.</span>';
+                                                    message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
+                                                    message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! URL leads to a known PHISHING domain.</span>';
                                                 } else {
                                                     message.textContent = '';
                                                     message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
+                                                    message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
                                                     message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>';
-                                                    message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">Domain is not blacklisted</span>';
-                                                    message.innerHTML += '<br>Extracting ML features for prediction<span class="push_right"><span class="buffering-symbol"></span></span>';
-                                                    fetch('http://127.0.0.1:5000/ml_predict?input=' + input, {
+                                                    message.innerHTML += '<br>Scanning DNSBL databases<span class="push_right"><span class="buffering-symbol"></span></span>';
+                                                    fetch('http://127.0.0.1:5000/scan_dnsbl?input=' + input, {
                                                         method: 'GET'
                                                     })
                                                         .then(function (response) {
@@ -189,259 +198,325 @@
                                                         })
                                                         .then(function (data) {
                                                             // Handle the response data
-                                                            var jsonData = JSON.parse(data);
-                                                            console.log(typeof jsonData); // Output the response data to the browser console
+                                                            console.log(data); // Output the response data to the browser console
                                                             // Update the message based on the response
-                                                            if (jsonData[0].Prediction === 1) {
+                                                            if (data === '1') {
                                                                 message.textContent = '';
                                                                 message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
+                                                                message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
                                                                 message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>'
-                                                                message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">Domain is not blacklisted</span>';
-                                                                message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! We predict that this website is trying to PHISH your data.</span><br><br>';
-                                                                const read_data = [];
-                                                                read_data[0] = jsonData[0].URL;
-                                                                read_data[1] = jsonData[0].Domain;
-                                                                if (jsonData[0].Have_IP == 1)
-                                                                    read_data[2] = 'YES';
-                                                                else
-                                                                    read_data[2] = 'NO';
-                                                                if (jsonData[0].Have_At == 1)
-                                                                    read_data[3] = 'YES';
-                                                                else
-                                                                    read_data[3] = 'NO';
-                                                                read_data[4] = jsonData[0].URL_Length;
-                                                                read_data[5] = jsonData[0].URL_Depth;
-                                                                if (jsonData[0]['Non-standard_Doubleslash'] == 1)
-                                                                    read_data[6] = 'YES';
-                                                                else
-                                                                    read_data[6] = 'NO';
-                                                                if (jsonData[0].https_Domain == 1)
-                                                                    read_data[7] = 'YES';
-                                                                else
-                                                                    read_data[7] = 'NO';
-                                                                if (jsonData[0].Shortened_URL == 1)
-                                                                    read_data[8] = 'YES';
-                                                                else
-                                                                    read_data[8] = 'NO';
-                                                                read_data[9] = jsonData[0].Hyphen_Count;
-                                                                read_data[10] = jsonData[0].Key_Count;
-                                                                if (jsonData[0].DNS_Record == 1)
-                                                                    read_data[11] = 'YES';
-                                                                else
-                                                                    read_data[11] = 'NO';
-                                                                if (jsonData[0].Domain_Age == 0)
-                                                                    read_data[12] = 'NOT FOUND'
-                                                                else
-                                                                    read_data[12] = jsonData[0].Domain_Age + ' days';
-                                                                if (jsonData[0].Domain_Active == 1)
-                                                                    read_data[13] = 'YES';
-                                                                else if (data['Domain_Active'] == 0)
-                                                                    read_data[13] = 'NO';
-                                                                else
-                                                                    read_data[13] = 'NOT FOUND';
-                                                                if (jsonData[0].Domain_Blacklisted == 1)
-                                                                    read_data[14] = 'YES';
-                                                                else
-                                                                    read_data[14] = 'NO';
-                                                                read_data[15] = jsonData[0].Comb_5y_interest
-                                                                if (jsonData[0].iFrame == 1)
-                                                                    read_data[16] = 'YES';
-                                                                else if (jsonData[0].iFrame == 0)
-                                                                    read_data[16] = 'NO';
-                                                                else
-                                                                    read_data[16] = 'NOT FOUND';
-                                                                if (jsonData[0].Mouse_Over == 1)
-                                                                    read_data[17] = 'YES';
-                                                                else if (jsonData[0].Mouse_Over == 0)
-                                                                    read_data[17] = 'NO';
-                                                                else
-                                                                    read_data[17] = 'NOT FOUND';
-                                                                if (jsonData[0].Right_Click == 1)
-                                                                    read_data[18] = 'YES';
-                                                                else if (jsonData[0].Right_Click == 0)
-                                                                    read_data[18] = 'NO';
-                                                                else
-                                                                    read_data[18] = 'NOT FOUND';
-                                                                if (jsonData[0].Web_Forwards == -1)
-                                                                    read_data = 'NOT FOUND';
-                                                                else
-                                                                    read_data[19] = jsonData[0].Web_Forwards;
-                                                                read_data[20] = 'PHISHING';
-                                                                window.jsPDF = window.jspdf.jsPDF;
-                                                                const doc = new window.jsPDF();
-                                                                const title = 'Feature Report';
-                                                                doc.setFontSize(18);
-                                                                doc.text(title, 10, 20);
-                                                                const currentDate = new Date().toUTCString();
-                                                                doc.setFontSize(12);
-                                                                doc.text(`${currentDate}`, 10, 30);
-                                                                const headers = ['Feature', 'Value'];
-                                                                const rows = [
-                                                                    ['URL', read_data[0]],
-                                                                    ['Domain', read_data[1]],
-                                                                    ['IP Address in URL', read_data[2]],
-                                                                    ['@ in URL', read_data[3]],
-                                                                    ['URL length', read_data[4]],
-                                                                    ['URL depth', read_data[5]],
-                                                                    ['Non-standard Doubleslashes in URL', read_data[6]],
-                                                                    ['Secure transfer protocol', read_data[7]],
-                                                                    ['Shortened URL', read_data[8]],
-                                                                    ['Number of hyphens in URL', read_data[9]],
-                                                                    ['Number of coercive keywords in URL', read_data[10]],
-                                                                    ['Is DNS record available?', read_data[11]],
-                                                                    ['Domain age', read_data[12]],
-                                                                    ['Is domain active?', read_data[13]],
-                                                                    ['Is domain blacklisted?', read_data[14]],
-                                                                    ['Google trends relevance (5yrs)', read_data[15]],
-                                                                    ['Hidden IFrames', read_data[16]],
-                                                                    ['MouseOver events', read_data[17]],
-                                                                    ['Right-click disabled', read_data[18]],
-                                                                    ['Number of redirects', read_data[19]],
-                                                                    ['Prediction', read_data[20]],
-                                                                ];
-                                                                const tableY = 40;
-                                                                doc.autoTable({
-                                                                    startY: tableY,
-                                                                    head: [headers],
-                                                                    body: rows,
-                                                                    theme: 'grid',
-                                                                });
-                                                                const pdfBytes = doc.output('arraybuffer');
-                                                                const blob = new Blob([pdfBytes], { type: "application/pdf" });
-                                                                const url = URL.createObjectURL(blob);
-
-                                                                const link = document.createElement("a");
-                                                                link.href = url;
-                                                                link.download = "FeatureReport_" + read_data[1] + ".pdf";
-                                                                link.textContent = "Download Feature Report";
-
-                                                                const downloadDiv = document.getElementById("message");
-                                                                downloadDiv.appendChild(link);
+                                                                message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! URL leads to a Blacklisted Domain htat is potentially dangerous.</span>';
                                                             } else {
                                                                 message.textContent = '';
                                                                 message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
+                                                                message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
                                                                 message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>';
                                                                 message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">Domain is not blacklisted</span>';
-                                                                message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">We predict that this website is SAFE</span><br><br>';
-                                                                const read_data = [];
-                                                                read_data[0] = jsonData[0].URL;
-                                                                read_data[1] = jsonData[0].Domain;
-                                                                if (jsonData[0].Have_IP == 1)
-                                                                    read_data[2] = 'YES';
-                                                                else
-                                                                    read_data[2] = 'NO';
-                                                                if (jsonData[0].Have_At == 1)
-                                                                    read_data[3] = 'YES';
-                                                                else
-                                                                    read_data[3] = 'NO';
-                                                                read_data[4] = jsonData[0].URL_Length;
-                                                                read_data[5] = jsonData[0].URL_Depth;
-                                                                if (jsonData[0]['Non-standard_Doubleslash'] == 1)
-                                                                    read_data[6] = 'YES';
-                                                                else
-                                                                    read_data[6] = 'NO';
-                                                                if (jsonData[0].https_Domain == 1)
-                                                                    read_data[7] = 'YES';
-                                                                else
-                                                                    read_data[7] = 'NO';
-                                                                if (jsonData[0].Shortened_URL == 1)
-                                                                    read_data[8] = 'YES';
-                                                                else
-                                                                    read_data[8] = 'NO';
-                                                                read_data[9] = jsonData[0].Hyphen_Count;
-                                                                read_data[10] = jsonData[0].Key_Count;
-                                                                if (jsonData[0].DNS_Record == 1)
-                                                                    read_data[11] = 'YES';
-                                                                else
-                                                                    read_data[11] = 'NO';
-                                                                if (jsonData[0].Domain_Age == 0)
-                                                                    read_data[12] = 'NOT FOUND'
-                                                                else
-                                                                    read_data[12] = jsonData[0].Domain_Age + ' days';
-                                                                if (jsonData[0].Domain_Active == 1)
-                                                                    read_data[13] = 'YES';
-                                                                else if (data['Domain_Active'] == 0)
-                                                                    read_data[13] = 'NO';
-                                                                else
-                                                                    read_data[13] = 'NOT FOUND';
-                                                                if (jsonData[0].Domain_Blacklisted == 1)
-                                                                    read_data[14] = 'YES';
-                                                                else
-                                                                    read_data[14] = 'NO';
-                                                                read_data[15] = jsonData[0].Comb_5y_interest
-                                                                if (jsonData[0].iFrame == 1)
-                                                                    read_data[16] = 'YES';
-                                                                else if (jsonData[0].iFrame == 0)
-                                                                    read_data[16] = 'NO';
-                                                                else
-                                                                    read_data[16] = 'NOT FOUND';
-                                                                if (jsonData[0].Mouse_Over == 1)
-                                                                    read_data[17] = 'YES';
-                                                                else if (jsonData[0].Mouse_Over == 0)
-                                                                    read_data[17] = 'NO';
-                                                                else
-                                                                    read_data[17] = 'NOT FOUND';
-                                                                if (jsonData[0].Right_Click == 1)
-                                                                    read_data[18] = 'YES';
-                                                                else if (jsonData[0].Right_Click == 0)
-                                                                    read_data[18] = 'NO';
-                                                                else
-                                                                    read_data[18] = 'NOT FOUND';
-                                                                if (jsonData[0].Web_Forwards == -1)
-                                                                    read_data = 'NOT FOUND';
-                                                                else
-                                                                    read_data[19] = jsonData[0].Web_Forwards;
-                                                                read_data[20] = 'SAFE';
-                                                                window.jsPDF = window.jspdf.jsPDF;
-                                                                const doc = new window.jsPDF();
-                                                                const title = 'Feature Report';
-                                                                doc.setFontSize(18);
-                                                                doc.text(title, 10, 20);
-                                                                const currentDate = new Date().toUTCString();
-                                                                doc.setFontSize(12);
-                                                                doc.text(`${currentDate}`, 10, 30);
-                                                                const headers = ['Feature', 'Value'];
-                                                                const rows = [
-                                                                    ['URL', read_data[0]],
-                                                                    ['Domain', read_data[1]],
-                                                                    ['IP Address in URL', read_data[2]],
-                                                                    ['@ in URL', read_data[3]],
-                                                                    ['URL length', read_data[4]],
-                                                                    ['URL depth', read_data[5]],
-                                                                    ['Non-standard Doubleslashes in URL', read_data[6]],
-                                                                    ['Secure transfer protocol', read_data[7]],
-                                                                    ['Shortened URL', read_data[8]],
-                                                                    ['Number of hyphens in URL', read_data[9]],
-                                                                    ['Number of coercive keywords in URL', read_data[10]],
-                                                                    ['Is DNS record available?', read_data[11]],
-                                                                    ['Domain age', read_data[12]],
-                                                                    ['Is domain active?', read_data[13]],
-                                                                    ['Is domain blacklisted?', read_data[14]],
-                                                                    ['Google trends relevance (5yrs)', read_data[15]],
-                                                                    ['Hidden IFrames', read_data[16]],
-                                                                    ['MouseOver events', read_data[17]],
-                                                                    ['Right-click disabled', read_data[18]],
-                                                                    ['Number of redirects', read_data[19]],
-                                                                    ['Prediction', read_data[20]],
-                                                                ];
-                                                                const tableY = 40;
-                                                                doc.autoTable({
-                                                                    startY: tableY,
-                                                                    head: [headers],
-                                                                    body: rows,
-                                                                    theme: 'grid',
-                                                                });
-                                                                const pdfBytes = doc.output('arraybuffer');
-                                                                const blob = new Blob([pdfBytes], { type: "application/pdf" });
-                                                                const url = URL.createObjectURL(blob);
+                                                                message.innerHTML += '<br>Extracting ML features for prediction<span class="push_right"><span class="buffering-symbol"></span></span>';
+                                                                fetch('http://127.0.0.1:5000/ml_predict?input=' + input, {
+                                                                    method: 'GET'
+                                                                })
+                                                                    .then(function (response) {
+                                                                        // Check if the response was successful
+                                                                        if (response.ok) {
+                                                                            // Extract the response as text
+                                                                            return response.text();
+                                                                        } else {
+                                                                            throw new Error('Request failed.');
+                                                                        }
+                                                                    })
+                                                                    .then(function (data) {
+                                                                        // Handle the response data
+                                                                        var jsonData = JSON.parse(data);
+                                                                        console.log(typeof jsonData); // Output the response data to the browser console
+                                                                        // Update the message based on the response
+                                                                        if (jsonData[0].Prediction === 1) {
+                                                                            message.textContent = '';
+                                                                            message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>'
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">Domain is not blacklisted</span>';
+                                                                            message.innerHTML += '<br><span class="xmark"></span><span class="push_right">Alert! We predict that this website is trying to PHISH your data.</span><br><br>';
+                                                                            const read_data = [];
+                                                                            read_data[0] = jsonData[0].URL;
+                                                                            read_data[1] = jsonData[0].Domain;
+                                                                            if (jsonData[0].Have_IP == 1)
+                                                                                read_data[2] = 'YES';
+                                                                            else
+                                                                                read_data[2] = 'NO';
+                                                                            if (jsonData[0].Have_At == 1)
+                                                                                read_data[3] = 'YES';
+                                                                            else
+                                                                                read_data[3] = 'NO';
+                                                                            read_data[4] = jsonData[0].URL_Length;
+                                                                            read_data[5] = jsonData[0].URL_Depth;
+                                                                            if (jsonData[0]['Non-standard_Doubleslash'] == 1)
+                                                                                read_data[6] = 'YES';
+                                                                            else
+                                                                                read_data[6] = 'NO';
+                                                                            if (jsonData[0].https_Domain == 1)
+                                                                                read_data[7] = 'YES';
+                                                                            else
+                                                                                read_data[7] = 'NO';
+                                                                            if (jsonData[0].Shortened_URL == 1)
+                                                                                read_data[8] = 'YES';
+                                                                            else
+                                                                                read_data[8] = 'NO';
+                                                                            read_data[9] = jsonData[0].Hyphen_Count;
+                                                                            read_data[10] = jsonData[0].Key_Count;
+                                                                            if (jsonData[0].DNS_Record == 1)
+                                                                                read_data[11] = 'YES';
+                                                                            else
+                                                                                read_data[11] = 'NO';
+                                                                            if (jsonData[0].Domain_Age == 0)
+                                                                                read_data[12] = 'NOT FOUND'
+                                                                            else
+                                                                                read_data[12] = jsonData[0].Domain_Age + ' days';
+                                                                            if (jsonData[0].Domain_Active == 1)
+                                                                                read_data[13] = 'YES';
+                                                                            else if (data['Domain_Active'] == 0)
+                                                                                read_data[13] = 'NO';
+                                                                            else
+                                                                                read_data[13] = 'NOT FOUND';
+                                                                            if (jsonData[0].Domain_Blacklisted == 1)
+                                                                                read_data[14] = 'YES';
+                                                                            else
+                                                                                read_data[14] = 'NO';
+                                                                            read_data[15] = jsonData[0].Comb_5y_interest
+                                                                            if (jsonData[0].iFrame == 1)
+                                                                                read_data[16] = 'YES';
+                                                                            else if (jsonData[0].iFrame == 0)
+                                                                                read_data[16] = 'NO';
+                                                                            else
+                                                                                read_data[16] = 'NOT FOUND';
+                                                                            if (jsonData[0].Mouse_Over == 1)
+                                                                                read_data[17] = 'YES';
+                                                                            else if (jsonData[0].Mouse_Over == 0)
+                                                                                read_data[17] = 'NO';
+                                                                            else
+                                                                                read_data[17] = 'NOT FOUND';
+                                                                            if (jsonData[0].Right_Click == 1)
+                                                                                read_data[18] = 'YES';
+                                                                            else if (jsonData[0].Right_Click == 0)
+                                                                                read_data[18] = 'NO';
+                                                                            else
+                                                                                read_data[18] = 'NOT FOUND';
+                                                                            if (jsonData[0].Web_Forwards == -1)
+                                                                                read_data = 'NOT FOUND';
+                                                                            else
+                                                                                read_data[19] = jsonData[0].Web_Forwards;
+                                                                            read_data[20] = 'PHISHING';
+                                                                            window.jsPDF = window.jspdf.jsPDF;
+                                                                            const doc = new window.jsPDF();
+                                                                            const title = 'Feature Report';
+                                                                            doc.setFontSize(18);
+                                                                            doc.text(title, 10, 20);
+                                                                            const currentDate = new Date().toUTCString();
+                                                                            doc.setFontSize(12);
+                                                                            doc.text(`${currentDate}`, 10, 30);
+                                                                            const headers = ['Feature', 'Value'];
+                                                                            const rows = [
+                                                                                ['URL', read_data[0]],
+                                                                                ['Domain', read_data[1]],
+                                                                                ['IP Address in URL', read_data[2]],
+                                                                                ['@ in URL', read_data[3]],
+                                                                                ['URL length', read_data[4]],
+                                                                                ['URL depth', read_data[5]],
+                                                                                ['Non-standard Doubleslashes in URL', read_data[6]],
+                                                                                ['Secure transfer protocol', read_data[7]],
+                                                                                ['Shortened URL', read_data[8]],
+                                                                                ['Number of hyphens in URL', read_data[9]],
+                                                                                ['Number of coercive keywords in URL', read_data[10]],
+                                                                                ['Is DNS record available?', read_data[11]],
+                                                                                ['Domain age', read_data[12]],
+                                                                                ['Is domain active?', read_data[13]],
+                                                                                ['Is domain blacklisted?', read_data[14]],
+                                                                                ['Google trends relevance (5yrs)', read_data[15]],
+                                                                                ['Hidden IFrames', read_data[16]],
+                                                                                ['MouseOver events', read_data[17]],
+                                                                                ['Right-click disabled', read_data[18]],
+                                                                                ['Number of redirects', read_data[19]],
+                                                                                ['Prediction', read_data[20]],
+                                                                            ];
+                                                                            const tableY = 40;
+                                                                            doc.autoTable({
+                                                                                startY: tableY,
+                                                                                head: [headers],
+                                                                                body: rows,
+                                                                                theme: 'grid',
+                                                                            });
+                                                                            const tableEndpoint = parseInt(doc.autoTable.previous.finalY);
+                                                                            console.log(tableEndpoint)
+                                                                            const title1 = 'SSL Certificate Details';
+                                                                            doc.setFontSize(18);
+                                                                            doc.text(title1, 10, tableEndpoint + 20);
+                                                                            doc.setFontSize(12);
+                                                                            const tableY1 = tableEndpoint + 25;
+                                                                            doc.autoTable({
+                                                                                startY: tableY1,
+                                                                                head: [headers1],
+                                                                                body: rows1,
+                                                                                theme: 'grid',
+                                                                            });
 
-                                                                const link = document.createElement("a");
-                                                                link.href = url;
-                                                                link.download = "FeatureReport_" + read_data[1] + ".pdf";
-                                                                link.textContent = "Download Feature Report";
+                                                                            const pdfBytes = doc.output('arraybuffer');
+                                                                            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                                                                            const url = URL.createObjectURL(blob);
 
-                                                                const downloadDiv = document.getElementById("message");
-                                                                downloadDiv.appendChild(link);
+                                                                            const link = document.createElement("a");
+                                                                            link.href = url;
+                                                                            link.download = "FeatureReport_" + read_data[1] + ".pdf";
+                                                                            link.textContent = "Download Feature Report";
+
+                                                                            const downloadDiv = document.getElementById("message");
+                                                                            downloadDiv.appendChild(link);
+                                                                        } else {
+                                                                            message.textContent = '';
+                                                                            message.innerHTML += '<span class="checkmark"></span><span class="push_right">Valid URL</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">SSL certificate verified</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">No matches in livefeed</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">Domain is not blacklisted</span>';
+                                                                            message.innerHTML += '<br><span class="checkmark"></span><span class="push_right">We predict that this website is SAFE</span><br><br>';
+                                                                            const read_data = [];
+                                                                            read_data[0] = jsonData[0].URL;
+                                                                            read_data[1] = jsonData[0].Domain;
+                                                                            if (jsonData[0].Have_IP == 1)
+                                                                                read_data[2] = 'YES';
+                                                                            else
+                                                                                read_data[2] = 'NO';
+                                                                            if (jsonData[0].Have_At == 1)
+                                                                                read_data[3] = 'YES';
+                                                                            else
+                                                                                read_data[3] = 'NO';
+                                                                            read_data[4] = jsonData[0].URL_Length;
+                                                                            read_data[5] = jsonData[0].URL_Depth;
+                                                                            if (jsonData[0]['Non-standard_Doubleslash'] == 1)
+                                                                                read_data[6] = 'YES';
+                                                                            else
+                                                                                read_data[6] = 'NO';
+                                                                            if (jsonData[0].https_Domain == 1)
+                                                                                read_data[7] = 'YES';
+                                                                            else
+                                                                                read_data[7] = 'NO';
+                                                                            if (jsonData[0].Shortened_URL == 1)
+                                                                                read_data[8] = 'YES';
+                                                                            else
+                                                                                read_data[8] = 'NO';
+                                                                            read_data[9] = jsonData[0].Hyphen_Count;
+                                                                            read_data[10] = jsonData[0].Key_Count;
+                                                                            if (jsonData[0].DNS_Record == 1)
+                                                                                read_data[11] = 'YES';
+                                                                            else
+                                                                                read_data[11] = 'NO';
+                                                                            if (jsonData[0].Domain_Age == 0)
+                                                                                read_data[12] = 'NOT FOUND'
+                                                                            else
+                                                                                read_data[12] = jsonData[0].Domain_Age + ' days';
+                                                                            if (jsonData[0].Domain_Active == 1)
+                                                                                read_data[13] = 'YES';
+                                                                            else if (data['Domain_Active'] == 0)
+                                                                                read_data[13] = 'NO';
+                                                                            else
+                                                                                read_data[13] = 'NOT FOUND';
+                                                                            if (jsonData[0].Domain_Blacklisted == 1)
+                                                                                read_data[14] = 'YES';
+                                                                            else
+                                                                                read_data[14] = 'NO';
+                                                                            read_data[15] = jsonData[0].Comb_5y_interest
+                                                                            if (jsonData[0].iFrame == 1)
+                                                                                read_data[16] = 'YES';
+                                                                            else if (jsonData[0].iFrame == 0)
+                                                                                read_data[16] = 'NO';
+                                                                            else
+                                                                                read_data[16] = 'NOT FOUND';
+                                                                            if (jsonData[0].Mouse_Over == 1)
+                                                                                read_data[17] = 'YES';
+                                                                            else if (jsonData[0].Mouse_Over == 0)
+                                                                                read_data[17] = 'NO';
+                                                                            else
+                                                                                read_data[17] = 'NOT FOUND';
+                                                                            if (jsonData[0].Right_Click == 1)
+                                                                                read_data[18] = 'YES';
+                                                                            else if (jsonData[0].Right_Click == 0)
+                                                                                read_data[18] = 'NO';
+                                                                            else
+                                                                                read_data[18] = 'NOT FOUND';
+                                                                            if (jsonData[0].Web_Forwards == -1)
+                                                                                read_data = 'NOT FOUND';
+                                                                            else
+                                                                                read_data[19] = jsonData[0].Web_Forwards;
+                                                                            read_data[20] = 'SAFE';
+                                                                            window.jsPDF = window.jspdf.jsPDF;
+                                                                            const doc = new window.jsPDF();
+                                                                            const title = 'Feature Report';
+                                                                            doc.setFontSize(18);
+                                                                            doc.text(title, 10, 20);
+                                                                            const currentDate = new Date().toUTCString();
+                                                                            doc.setFontSize(12);
+                                                                            doc.text(`${currentDate}`, 10, 30);
+                                                                            const headers = ['Feature', 'Value'];
+                                                                            const rows = [
+                                                                                ['URL', read_data[0]],
+                                                                                ['Domain', read_data[1]],
+                                                                                ['IP Address in URL', read_data[2]],
+                                                                                ['@ in URL', read_data[3]],
+                                                                                ['URL length', read_data[4]],
+                                                                                ['URL depth', read_data[5]],
+                                                                                ['Non-standard Doubleslashes in URL', read_data[6]],
+                                                                                ['Secure transfer protocol', read_data[7]],
+                                                                                ['Shortened URL', read_data[8]],
+                                                                                ['Number of hyphens in URL', read_data[9]],
+                                                                                ['Number of coercive keywords in URL', read_data[10]],
+                                                                                ['Is DNS record available?', read_data[11]],
+                                                                                ['Domain age', read_data[12]],
+                                                                                ['Is domain active?', read_data[13]],
+                                                                                ['Is domain blacklisted?', read_data[14]],
+                                                                                ['Google trends relevance (5yrs)', read_data[15]],
+                                                                                ['Hidden IFrames', read_data[16]],
+                                                                                ['MouseOver events', read_data[17]],
+                                                                                ['Right-click disabled', read_data[18]],
+                                                                                ['Number of redirects', read_data[19]],
+                                                                                ['Prediction', read_data[20]],
+                                                                            ];
+                                                                            const tableY = 40;
+                                                                            doc.autoTable({
+                                                                                startY: tableY,
+                                                                                head: [headers],
+                                                                                body: rows,
+                                                                                theme: 'grid',
+                                                                            });
+                                                                            const tableEndpoint = parseInt(doc.autoTable.previous.finalY);
+                                                                            console.log(tableEndpoint)
+                                                                            const title1 = 'SSL Certificate Details';
+                                                                            doc.setFontSize(18);
+                                                                            doc.text(title1, 10, tableEndpoint + 20);
+                                                                            doc.setFontSize(12);
+                                                                            const tableY1 = tableEndpoint + 25;
+                                                                            doc.autoTable({
+                                                                                startY: tableY1,
+                                                                                head: [headers1],
+                                                                                body: rows1,
+                                                                                theme: 'grid',
+                                                                            });
+
+                                                                            const pdfBytes = doc.output('arraybuffer');
+                                                                            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                                                                            const url = URL.createObjectURL(blob);
+
+                                                                            const link = document.createElement("a");
+                                                                            link.href = url;
+                                                                            link.download = "FeatureReport_" + read_data[1] + ".pdf";
+                                                                            link.textContent = "Download Feature Report";
+
+                                                                            const downloadDiv = document.getElementById("message");
+                                                                            downloadDiv.appendChild(link);
+                                                                        }
+                                                                    })
+                                                                    .catch(function (error) {
+                                                                        // Handle any errors
+                                                                        console.error(error);
+                                                                        message.textContent = 'Error occurred.';
+                                                                    });
                                                             }
                                                         })
                                                         .catch(function (error) {
